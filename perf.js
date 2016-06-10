@@ -79,7 +79,8 @@ module.exports = Class.create({
 		if (!id) id = this.totalKey;
 		var now = process.hrtime();
 		
-		if (!this.perf[id]) return;
+		if (!this.perf[id] && !start) return;
+		if (!this.perf[id]) this.perf[id] = { elapsed: 0 };
 		var obj = this.perf[id];
 		
 		if (start) obj.start = start;
@@ -179,6 +180,26 @@ module.exports = Class.create({
 	getCounters: function() {
 		// Get raw counters object
 		return this.counters;
+	},
+	
+	import: function(perf, prefix) {
+		// import perf metrics from another object (and adjust scale to match)
+		if (!prefix) prefix = '';
+		
+		for (var key in perf.perf) {
+			if (key != this.totalKey) {
+				var pkey = prefix + key;
+				if (!this.perf[pkey]) this.perf[pkey] = {};
+				if (!this.perf[pkey].end) this.perf[pkey].end = 1;
+				if (!this.perf[pkey].elapsed) this.perf[pkey].elapsed = 0;
+				this.perf[pkey].elapsed += (perf.perf[key].elapsed / (perf.scale / this.scale)) || 0;
+			}
+		}
+		
+		for (var key in perf.counters) {
+			var pkey = prefix + key;
+			this.count( pkey, perf.counters[key] );
+		}
 	}
 	
 });

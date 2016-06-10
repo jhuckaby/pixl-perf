@@ -7,72 +7,72 @@ This module provides an easy way to track performance metrics in your app.  Basi
 Use [npm](https://www.npmjs.com/) to install the module:
 
 ```
-	npm install pixl-perf
+npm install pixl-perf
 ```
 
 Then use `require()` to load it in your code:
 
 ```javascript
-	var Perf = require('pixl-perf');
+var Perf = require('pixl-perf');
 ```
 
 To use the module, instantiate an object, and start tracking.  The first thing you should do is call `begin()` without any arguments, which starts the overall tracking system.  Similar, the last thing you should do is call `end()` also with no arguments.  These allow the system to track a "total time elapsed".  Example:
 
 ```javascript
-	var perf = new Perf();
-	perf.begin(); // start overall tracking
-	
-	// do stuff here
-	
-	perf.end(); // end all tracking
+var perf = new Perf();
+perf.begin(); // start overall tracking
+
+// do stuff here
+
+perf.end(); // end all tracking
 ```
 
 To track individual metrics, simply pass an identifier key to `begin()` and `end()`.  Here is an example for tracking something synchronous:
 
 ```javascript
-	var perf = new Perf();
-	perf.begin(); // start overall tracking
-	
-	perf.begin('json_parse');
-	var obj = JSON.parse("{ ...some long JSON document here... }");
-	perf.end('json_parse');
-	
-	perf.end(); // end all tracking
+var perf = new Perf();
+perf.begin(); // start overall tracking
+
+perf.begin('json_parse');
+var obj = JSON.parse("{ ...some long JSON document here... }");
+perf.end('json_parse');
+
+perf.end(); // end all tracking
 ```
 
 You can overlap and nest multiple metrics inside each other.  For example, you could have an overall `db` metric for database operations, but also an inner `db_query` for the actual DB query time.
 
 ```javascript
-	var perf = new Perf();
-	perf.begin(); // start overall tracking
-	
-	perf.begin('db');
-	// connect to db here
-	
-		perf.begin('db_query');
-		// run db query here
-		perf.end('db_query');
-	
-	// disconnect from db here
-	perf.end('db');
-	
-	perf.end(); // end all tracking
+var perf = new Perf();
+perf.begin(); // start overall tracking
+
+perf.begin('db');
+// connect to db here
+
+	perf.begin('db_query');
+	// run db query here
+	perf.end('db_query');
+
+// disconnect from db here
+perf.end('db');
+
+perf.end(); // end all tracking
 ```
 
 For tracking asynchronous operations, a little extra care is needed.  We can't simply call `end()` with a plain key, because multiple Node "threads" may be running the same operation at the same time.  So in this case, we can use the return value of `begin()` as a promise.  `begin()` always returns a special unique tracker object, which has its own `end()` method on it.
 
 ```javascript
-	var perf = new Perf();
-	perf.begin(); // start overall tracking
+var perf = new Perf();
+perf.begin(); // start overall tracking
+
+var tracker = perf.begin('something'); // begin measuring 'something'
+setTimeout( function() {
+	// one second later...
+	tracker.end(); // done with something
 	
-	var tracker = perf.begin('something'); // begin measuring 'something'
-	setTimeout( function() {
-		// one second later...
-		tracker.end(); // done with something
-		
-		perf.end(); // end all tracking
-		console.log("Perf Metrics: ", perf.metrics());
-	}, 1000 );
+	perf.end(); // end all tracking
+	console.log("Perf Metrics: ", perf.metrics());
+}, 1000 );
 ```
 
 This way, if your app happens to call the same code multiple times simultaneously, each one will have its own unique tracker object, and not clobber each other.  When `end()` is called on the tracker object, it merges the results back into the main instance it was spawned from.
@@ -80,9 +80,9 @@ This way, if your app happens to call the same code multiple times simultaneousl
 As you can see, the above example also introduces the `metrics()` method, for fetching a summary of all our measurements.  This would output something like the following:
 
 ```
-	Perf Metrics:  { scale: 1000,
-	  perf: { total: 1005.205, something: 1004.982 },
-	  counters: {} }
+Perf Metrics:  { scale: 1000,
+  perf: { total: 1005.205, something: 1004.982 },
+  counters: {} }
 ```
 
 The `metrics()` method returns all the performance metrics recorded up to the current point.  It will *not* include metrics still in progress (i.e. those not ended).  It consists of the following components:
@@ -102,24 +102,24 @@ See [Output Formats](#output-formats) for other available output formats, which 
 In addition to tracking elapsed time, you can also have the library track any arbitrary number, called a "counter".  These are accessible by the `count()` method, and accept any number, integer or float, positive or negative.  This can do things such as increment line counters for processing a file, or count the number of DB queries or other actions that took place.  These counters are included in summary reports, and can be used to calculate averages, or just displayed as is.  Example:
 
 ```javascript
-	var perf = new Perf();
-	perf.begin(); // start overall tracking
-	
-	// increment some counters
-	perf.count('lines');
-	perf.count('db_queries', 2);
-	perf.count('something', 0.0001);
-	
-	perf.end(); // end all tracking
-	console.log("Perf Metrics: ", perf.metrics());
+var perf = new Perf();
+perf.begin(); // start overall tracking
+
+// increment some counters
+perf.count('lines');
+perf.count('db_queries', 2);
+perf.count('something', 0.0001);
+
+perf.end(); // end all tracking
+console.log("Perf Metrics: ", perf.metrics());
 ```
 
 As you can see, you can call `count()` without a number argument (which defaults to `1`), or pass it any integer or float.  The above example would output:
 
 ```
-	Perf Metrics:  { scale: 1000,
-	  perf: { total: 0.297 },
-	  counters: { lines: 1, db_queries: 2, something: 0.0001 } }
+Perf Metrics:  { scale: 1000,
+  perf: { total: 0.297 },
+  counters: { lines: 1, db_queries: 2, something: 0.0001 } }
 ```
 
 ## Scale and Precision
@@ -127,31 +127,31 @@ As you can see, you can call `count()` without a number argument (which defaults
 By default, the library tracks all metrics using milliseconds, and allows up to 3 digits after the decimal point.  You can customize both of these things, by calling `setScale()` which sets the time scale, and/or `setPrecision()` which controls the precision (the number of digits after the decimal).  Examples:
 
 ```javascript
-	var perf = new Perf();
-	
-	perf.setScale( 1000000000 ); // nanoseconds
-	perf.setScale( 1000000 ); // microseconds
-	perf.setScale( 1000 ); // milliseconds
-	perf.setScale( 1 ); // seconds
-	
-	perf.setPrecision( 1 ); // integers only
-	perf.setPrecision( 10 ); // 1 digit after the decimal
-	perf.setPrecision( 100 ); // 2 digits after the decimal
-	perf.setPrecision( 1000 ); // 3 digits after the decimal
+var perf = new Perf();
+
+perf.setScale( 1000000000 ); // nanoseconds
+perf.setScale( 1000000 ); // microseconds
+perf.setScale( 1000 ); // milliseconds
+perf.setScale( 1 ); // seconds
+
+perf.setPrecision( 1 ); // integers only
+perf.setPrecision( 10 ); // 1 digit after the decimal
+perf.setPrecision( 100 ); // 2 digits after the decimal
+perf.setPrecision( 1000 ); // 3 digits after the decimal
 ```
 
 So for example, if you wanted to track time in nanoseconds, but only use integers, set the two accordingly:
 
 ```javascript
-	perf.setScale( 1000000000 ); // nanoseconds
-	perf.setPrecision( 1 ); // integers only
+perf.setScale( 1000000000 ); // nanoseconds
+perf.setPrecision( 1 ); // integers only
 ```
 
 Or, if you wanted to track time in seconds, but have floating point precision up to 6 digits after the decimal, call:
 
 ```javascript
-	perf.setScale( 1 ); // seconds
-	perf.setPrecision( 1000000 ); // 6 digits after the decimal
+perf.setScale( 1 ); // seconds
+perf.setPrecision( 1000000 ); // 6 digits after the decimal
 ```
 
 Another way to think about time scale is that you're basically telling the library how to represent "one second".  So, with a value of '1' passed to `setScale()`, one second will appear as `1.0` (or thereabouts, give or take some decimal points), whereas a value of `1000` will be reported as `1000.0` or the like.
@@ -164,14 +164,14 @@ Previously you've seen the output of the `metrics()` method, which returns an ob
 
 Calling `json()` will simply return a JSON serialized string of the metrics object.  This is merely a convenience, as you could just as easily call `JSON.stringify()` yourself, but whatever, it's there if you want it.  Example:
 
-```
-	{"scale":1,"perf":{"total":1.006985,"something":1.006581},"counters":{"lines":1,"db_queries":2,"something":0.0001}}
+```js
+{"scale":1,"perf":{"total":1.006985,"something":1.006581},"counters":{"lines":1,"db_queries":2,"something":0.0001}}
 ```
 
 Calling `summarize()` will return a flattened summarization of the metrics in psuedo-query-string format.  This is useful for some logs or analysis / reporting systems which don't support native JSON.  Example:
 
 ```
-	scale=1&total=1.00728&something=1.006581&c_lines=1&c_db_queries=2&c_something=0.0001
+scale=1&total=1.00728&something=1.006581&c_lines=1&c_db_queries=2&c_something=0.0001
 ```
 
 As you can see, all the information is in the summary, but it is represented with ampersand-delimited key/value pairs similar to a URL query string.  Counters are always at the end, and prefixed with `c_` to avoid key collisions.
@@ -179,6 +179,24 @@ As you can see, all the information is in the summary, but it is represented wit
 ## Resetting
 
 You can call `reset()` to reset the performance tracker to start a new session.  Don't forget to call `begin()` again, without a key, to start tracking the total time.  It will preserve your scale and precision settings.
+
+## Importing
+
+You can import performance metrics from another `pixl-perf` object by calling the `import()` method.  This will merge in all the metrics and counters from the specified object, adding new keys or appending elapsed time to existing keys.  If the two classes have different scale settings, the values are converted as they are imported.  Example:
+
+```js
+perf.import( other_perf );
+```
+
+Note that this only imports individual named metrics, and not the total time.
+
+You can optionally prefix all the keys of the imported metrics, so they don't collide with your own keys.  Example:
+
+```js
+perf.import( other_perf, 'other_' );
+```
+
+This would prefix all of the `other_perf` keys with the string `other_`.
 
 ## Advanced
 
@@ -192,7 +210,9 @@ Finally, if you need to simply fetch the current elapsed time for one single met
 
 # License
 
-Copyright (c) 2015 Joseph Huckaby.
+The MIT License
+
+Copyright (c) 2015 - 2016 Joseph Huckaby.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
