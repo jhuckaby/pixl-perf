@@ -104,8 +104,8 @@ module.exports = Class.create({
 	
 	count: function(id, amount) {
 		// increment (or decrement) simple counter, unrelated to time measurement
-		if (!amount) amount = 1;
-		if (!this.counters[id]) this.counters[id] = amount;
+		if (typeof(amount) == 'undefined') amount = 1;
+		if (!(id in this.counters)) this.counters[id] = amount;
 		else this.counters[id] += amount;
 	},
 	
