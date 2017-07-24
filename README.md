@@ -198,6 +198,8 @@ perf.import( other_perf, 'other_' );
 
 This would prefix all of the `other_perf` keys with the string `other_`.
 
+Importing works with both `pixl-perf` class instances, as well as generic objects returned from `metrics()`.
+
 ## Advanced
 
 If you need low-level access to the performance tracking internals, here are a few ways to do that:
@@ -212,7 +214,7 @@ Finally, if you need to simply fetch the current elapsed time for one single met
 
 The MIT License
 
-Copyright (c) 2015 - 2016 Joseph Huckaby.
+Copyright (c) 2015 - 2017 Joseph Huckaby.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

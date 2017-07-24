@@ -184,21 +184,27 @@ module.exports = Class.create({
 	
 	import: function(perf, prefix) {
 		// import perf metrics from another object (and adjust scale to match)
+		// can be a pixl-perf instance, or an object from calling metrics()
 		if (!prefix) prefix = '';
 		
-		for (var key in perf.perf) {
-			if (key != this.totalKey) {
-				var pkey = prefix + key;
-				if (!this.perf[pkey]) this.perf[pkey] = {};
-				if (!this.perf[pkey].end) this.perf[pkey].end = 1;
-				if (!this.perf[pkey].elapsed) this.perf[pkey].elapsed = 0;
-				this.perf[pkey].elapsed += (perf.perf[key].elapsed / (perf.scale / this.scale)) || 0;
+		if (perf.perf) {
+			for (var key in perf.perf) {
+				if (key != this.totalKey) {
+					var pkey = prefix + key;
+					if (!this.perf[pkey]) this.perf[pkey] = {};
+					if (!this.perf[pkey].end) this.perf[pkey].end = 1;
+					if (!this.perf[pkey].elapsed) this.perf[pkey].elapsed = 0;
+					var elapsed = (typeof(perf.perf[key]) == 'number') ? perf.perf[key] : perf.perf[key].elapsed;
+					this.perf[pkey].elapsed += (elapsed / (perf.scale / this.scale)) || 0;
+				}
 			}
 		}
 		
-		for (var key in perf.counters) {
-			var pkey = prefix + key;
-			this.count( pkey, perf.counters[key] );
+		if (perf.counters) {
+			for (var key in perf.counters) {
+				var pkey = prefix + key;
+				this.count( pkey, perf.counters[key] );
+			}
 		}
 	}
 	
