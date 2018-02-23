@@ -100,6 +100,8 @@ module.exports = Class.create({
 			// increment elapsed to allow for multiple trackings on same metric
 			obj.elapsed += elapsed;
 		}
+		
+		return elapsed;
 	},
 	
 	count: function(id, amount) {
@@ -230,7 +232,7 @@ var PerfMetric = Class.create({
 	
 	end: function() {
 		// end tracking
-		this.perf.end(this.id, this.start);
+		return this.perf.end(this.id, this.start);
 	}
 	
 });
