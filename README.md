@@ -1,6 +1,6 @@
 # Overview
 
-This module provides an easy way to track performance metrics in your app.  Basically, you wrap your function calls or async operations you want to measure with `begin()` and `end()` calls, provide IDs for each metric, and the library provides a summary report whenever you want one.  You can also increment arbitrary counters, and include that data in the report as well.
+This module provides an easy way to track high resolution performance metrics in your app.  Basically, you wrap your function calls or async operations you want to measure with `begin()` and `end()` calls, provide IDs for each metric, and the library provides a summary report whenever you want one.  You can also increment arbitrary counters, and include that data in the report as well.
 
 # Usage
 
@@ -210,11 +210,100 @@ Second, if you need access to the raw counters object, call `getCounters()`.  Th
 
 Finally, if you need to simply fetch the current elapsed time for one single metric, call `elapsed()` and pass in the key of the metric you wish to retrieve.  Pass `true` as the second argument to massage the value into the current precision setting (i.e. trim excess decimals if required).  Note that the metric must be "ended" for this to work.
 
+### Total Key
+
+To change the name of the total key, set the `totalKey` property to whatever string you want.  It defaults to `total`.  Example:
+
+```js
+var perf = new Perf();
+perf.totalKey = 't';
+```
+
+### Special MinMax Mode
+
+This optional mode allows you to accumulate data about multiple performance measurements over time, and then fetch a summary.  Basically, when enabled, it tracks the minimum, average, maximum, total and counts for each named metric.  All this accumulated data is then made available via a summary API.
+
+This mode is useful when your application measures the same metric multiple times.  Then, instead of logging performance for each measurement, you can log a summary of all the min/avg/max metrics over a larger time period (last second, last minute, etc.).
+
+To enable the feature, set the `minMax` property to true, then begin taking multiple measurements.  Example use:
+
+```js
+var perf = new Perf();
+perf.minMax = true;
+
+for (var idx = 0; idx < 100; idx++) {
+	perf.begin('load_data');
+		// do something loady
+	perf.end('load_data');
+
+	perf.begin('save_data');
+		// do something savey
+	perf.end('save_data');
+}
+```
+
+When you are done collecting measurements, call the `getMinMaxMetrics()` method to fetch a summary of all the minimums, averages, maximums, totals and counts for all your named metrics.  Example:
+
+```js
+var metrics = perf.getMinMaxMetrics();
+```
+
+This returns an object which contains a property for each of your metrics, and the values are sub-objects containing `min`, `max`, `total`, `count` and `avg` properties.  Example:
+
+```js
+{
+	"load_data": {
+		"min": 0.132,
+		"max": 8.828,
+		"total": 319.99,
+		"count": 100,
+		"avg": 1.285
+	},
+	"save_data": {
+		"min": 0.784,
+		"max": 7.367,
+		"total": 198.952,
+		"count": 100,
+		"avg": 1.591
+	}
+}
+```
+
+The values are all converted to the correct scale and precision for your `pixl-perf` object.
+
+Note that the `total` metric is ignored in this mode.  This is as designed, because total is only ever measured once, and this mode is more for collecting multiple measurements and fetching metrics for them over time.
+
+However, what you can do is use *two* types of `pixl-perf` objects, one to collect basic metrics (including a total) and another to accumulate them with `minMax`.  You can import metrics from one into the other using the `import()` method.  Example:
+
+```js
+var a = new Perf();
+a.begin();
+	// do something
+a.end();
+
+var b = new Perf();
+b.begin();
+	// do something
+b.end();
+
+var perf = new Perf();
+perf.minMax = true;
+perf.totalKey = 'unused';
+
+// import from a and b
+perf.import( a );
+perf.import( b );
+
+var metrics = perf.getMinMaxMetrics();
+```
+
+This would accumulate the metrics from `a` and `b` into the `perf` object and include their totals.  The trick here is setting the `totalKey` to `"unused"` (really any string other than the default `total`).  This allows `import()` to import the totals from `a` and `b`, which it normally wouldn't do.
+
 # License
 
 The MIT License
 
-Copyright (c) 2015 - 2017 Joseph Huckaby.
+Copyright (c) 2015 - 2018 Joseph Huckaby.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

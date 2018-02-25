@@ -12,6 +12,7 @@ module.exports = Class.create({
 	scale: 1000, // milliseconds
 	precision: 1000, // 3 digits
 	totalKey: 'total', // where to store the total
+	minMax: false, // track min/avg/max per metric
 	
 	__events: false,
 	
@@ -101,7 +102,14 @@ module.exports = Class.create({
 			obj.elapsed += elapsed;
 		}
 		
-		return elapsed;
+		if (this.minMax) {
+			if (!obj.count || (elapsed < obj.min)) obj.min = elapsed;
+			if (!obj.count || (elapsed > obj.max)) obj.max = elapsed;
+			if (!obj.count) obj.count = 0;
+			obj.count++;
+		}
+		
+		return this.formatValue(elapsed);
 	},
 	
 	count: function(id, amount) {
@@ -169,7 +177,7 @@ module.exports = Class.create({
 		if (!this.perf[id].elapsed) return 0;
 		
 		if (display_format) {
-			return Math.floor(this.perf[id].elapsed * this.precision) / this.precision;
+			return this.formatValue( this.perf[id].elapsed );
 		}
 		else return this.perf[id].elapsed;
 	},
@@ -182,6 +190,34 @@ module.exports = Class.create({
 	getCounters: function() {
 		// Get raw counters object
 		return this.counters;
+	},
+	
+	formatValue: function(value) {
+		// format value according to our precision
+		return Math.floor(value * this.precision) / this.precision;
+	},
+	
+	getMinMaxMetrics: function() {
+		// get min/max/avg/count/total for each named metric (omits total)
+		// special 'minMax' mode must be enabled
+		if (!this.minMax) return {};
+		var metrics = {};
+		
+		for (var id in this.perf) {
+			var obj = this.perf[id];
+			if (obj.end && (id != this.totalKey)) {
+				if (!obj.elapsed) obj.elapsed = 0;
+				metrics[id] = {
+					min: this.formatValue( obj.min || 0 ),
+					max: this.formatValue( obj.max || 0 ),
+					total: this.formatValue( obj.elapsed ),
+					count: obj.count || 0,
+					avg: this.formatValue( obj.elapsed / (obj.count || 1) )
+				};
+			}
+		}
+		
+		return metrics;
 	},
 	
 	import: function(perf, prefix) {
@@ -198,9 +234,29 @@ module.exports = Class.create({
 					if (!this.perf[pkey].elapsed) this.perf[pkey].elapsed = 0;
 					var elapsed = (typeof(perf.perf[key]) == 'number') ? perf.perf[key] : perf.perf[key].elapsed;
 					this.perf[pkey].elapsed += (elapsed / (perf.scale / this.scale)) || 0;
-				}
-			}
-		}
+					
+					if (this.minMax && perf.minMax) {
+						// both source and dest have minMax, so import entire min/max/count
+						var adj_min = perf.perf[key].min / (perf.scale / this.scale);
+						if (!this.perf[pkey].count || (adj_min < this.perf[pkey].min)) this.perf[pkey].min = adj_min;
+						
+						var adj_max = perf.perf[key].max / (perf.scale / this.scale);
+						if (!this.perf[pkey].count || (adj_max > this.perf[pkey].max)) this.perf[pkey].max = adj_max;
+						
+						if (!this.perf[pkey].count) this.perf[pkey].count = 0;
+						this.perf[pkey].count += perf.perf[key].count || 0;
+					} // minMax
+					else if (this.minMax) {
+						// source has no minMax, but dest does, so just import their elapsed as one measurement
+						var adj_elapsed = (elapsed / (perf.scale / this.scale)) || 0;
+						if (!this.perf[pkey].count || (adj_elapsed < this.perf[pkey].min)) this.perf[pkey].min = adj_elapsed;
+						if (!this.perf[pkey].count || (adj_elapsed > this.perf[pkey].max)) this.perf[pkey].max = adj_elapsed;
+						if (!this.perf[pkey].count) this.perf[pkey].count = 0;
+						this.perf[pkey].count++;
+					}
+				} // not totalKey
+			} // foreach perf
+		} // perf.perf
 		
 		if (perf.counters) {
 			for (var key in perf.counters) {
