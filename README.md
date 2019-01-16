@@ -176,6 +176,18 @@ scale=1&total=1.00728&something=1.006581&c_lines=1&c_db_queries=2&c_something=0.
 
 As you can see, all the information is in the summary, but it is represented with ampersand-delimited key/value pairs similar to a URL query string.  Counters are always at the end, and prefixed with `c_` to avoid key collisions.
 
+The `summarize()` method also accepts an optional prefix string, which will precede every time-based key.  This way you can have them all prefixed like the counters are.  Example:
+
+```js
+perf.summarize( "t_" );
+```
+
+Output:
+
+```
+scale=1&total=1.00728&t_something=1.006581&t_other=0.02&c_lines=1&c_db_queries=2&c_something=0.0001
+```
+
 ## Resetting
 
 You can call `reset()` to reset the performance tracker to start a new session.  Don't forget to call `begin()` again, without a key, to start tracking the total time.  It will preserve your scale and precision settings.

@@ -145,12 +145,13 @@ module.exports = Class.create({
 		return JSON.stringify( this.metrics() );
 	},
 	
-	summarize: function() {
+	summarize: function(prefix) {
 		// Summarize performance metrics in query string format
 		var pairs = [];
 		var metrics = this.metrics();
+		if (!prefix) prefix = '';
 		
-		// prefix with scale
+		// start with scale
 		pairs.push( 'scale=' + this.scale );
 		
 		// make sure total is always right after scale
@@ -159,7 +160,7 @@ module.exports = Class.create({
 		
 		// build summary string of other metrics
 		for (var id in metrics.perf) {
-			pairs.push( id + '=' + metrics.perf[id] );
+			pairs.push( prefix + id + '=' + metrics.perf[id] );
 		}
 		
 		// add counters if applicable, prefix each with c_
