@@ -2,7 +2,6 @@
 // Copyright (c) 2014 Joseph Huckaby
 // Released under the MIT License
 
-var Util = require('util');
 var Class = require("pixl-class");
 
 module.exports = Class.create({
@@ -88,7 +87,7 @@ module.exports = Class.create({
 		obj.end = now;
 		if (!obj.start) obj.start = obj.end;
 		
-		var elapsed = Util.isArray(obj.start) ? 
+		var elapsed = Array.isArray(obj.start) ? 
 			this.calcElapsed( obj.start ) : 0;
 		
 		if (id == this.totalKey) {
