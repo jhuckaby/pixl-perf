@@ -1,6 +1,6 @@
 {
 	"name": "pixl-perf",
-	"version": "1.0.7",
+	"version": "1.0.8",
 	"description": "A simple, high precision performance tracking system.",
 	"author": "Joseph Huckaby <jhuckaby@gmail.com>",
 	"homepage": "https://github.com/jhuckaby/pixl-perf",
@@ -18,7 +18,7 @@
 		"profiling"
 	],
 	"dependencies": {
-		"pixl-class": "^1.0.0"
+		"pixl-class": "^1.0.3"
 	},
 	"devDependencies": {}
 }
