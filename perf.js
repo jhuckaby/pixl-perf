@@ -1,5 +1,5 @@
 // High Resolution Performance Tracker for Node.JS
-// Copyright (c) 2014 Joseph Huckaby
+// Copyright (c) 2014 - 2022 Joseph Huckaby
 // Released under the MIT License
 
 var Class = require("pixl-class");
@@ -171,15 +171,20 @@ module.exports = Class.create({
 		return pairs.join('&');
 	},
 	
-	elapsed: function(id, display_format) {
+	elapsed: function(id, disp) {
 		// get elapsed seconds from given metric
+		if (!id) id = this.totalKey;
 		if (!this.perf[id]) return 0;
-		if (!this.perf[id].elapsed) return 0;
 		
-		if (display_format) {
-			return this.formatValue( this.perf[id].elapsed );
+		var obj = this.perf[id];
+		var elapsed = obj.elapsed || 0;
+		
+		if (!elapsed && obj.start && !obj.end) {
+			// perf is still in progress -- return current elapsed
+			elapsed = this.calcElapsed( obj.start );
 		}
-		else return this.perf[id].elapsed;
+		
+		return disp ? this.formatValue(elapsed) : elapsed;
 	},
 	
 	get: function() {
