@@ -6,20 +6,20 @@ This module provides an easy way to track high resolution performance metrics in
 
 Use [npm](https://www.npmjs.com/) to install the module:
 
-```
+```sh
 npm install pixl-perf
 ```
 
 Then use `require()` to load it in your code:
 
-```javascript
-var Perf = require('pixl-perf');
+```js
+const Perf = require('pixl-perf');
 ```
 
 To use the module, instantiate an object, and start tracking.  The first thing you should do is call `begin()` without any arguments, which starts the overall tracking system.  Similar, the last thing you should do is call `end()` also with no arguments.  These allow the system to track a "total time elapsed".  Example:
 
-```javascript
-var perf = new Perf();
+```js
+let perf = new Perf();
 perf.begin(); // start overall tracking
 
 // do stuff here
@@ -29,12 +29,12 @@ perf.end(); // end all tracking
 
 To track individual metrics, simply pass an identifier key to `begin()` and `end()`.  Here is an example for tracking something synchronous:
 
-```javascript
-var perf = new Perf();
+```js
+let perf = new Perf();
 perf.begin(); // start overall tracking
 
 perf.begin('json_parse');
-var obj = JSON.parse("{ ...some long JSON document here... }");
+let obj = JSON.parse("{ ...some long JSON document here... }");
 perf.end('json_parse');
 
 perf.end(); // end all tracking
@@ -42,8 +42,8 @@ perf.end(); // end all tracking
 
 You can overlap and nest multiple metrics inside each other.  For example, you could have an overall `db` metric for database operations, but also an inner `db_query` for the actual DB query time.
 
-```javascript
-var perf = new Perf();
+```js
+let perf = new Perf();
 perf.begin(); // start overall tracking
 
 perf.begin('db');
@@ -61,11 +61,11 @@ perf.end(); // end all tracking
 
 For tracking asynchronous operations, a little extra care is needed.  We can't simply call `end()` with a plain key, because multiple Node "threads" may be running the same operation at the same time.  So in this case, we can use the return value of `begin()` as a promise.  `begin()` always returns a special unique tracker object, which has its own `end()` method on it.
 
-```javascript
-var perf = new Perf();
+```js
+let perf = new Perf();
 perf.begin(); // start overall tracking
 
-var tracker = perf.begin('something'); // begin measuring 'something'
+let tracker = perf.begin('something'); // begin measuring 'something'
 setTimeout( function() {
 	// one second later...
 	tracker.end(); // done with something
@@ -101,8 +101,8 @@ See [Output Formats](#output-formats) for other available output formats, which 
 
 In addition to tracking elapsed time, you can also have the library track any arbitrary number, called a "counter".  These are accessible by the `count()` method, and accept any number, integer or float, positive or negative.  This can do things such as increment line counters for processing a file, or count the number of DB queries or other actions that took place.  These counters are included in summary reports, and can be used to calculate averages, or just displayed as is.  Example:
 
-```javascript
-var perf = new Perf();
+```js
+let perf = new Perf();
 perf.begin(); // start overall tracking
 
 // increment some counters
@@ -126,8 +126,8 @@ Perf Metrics:  { scale: 1000,
 
 By default, the library tracks all metrics using milliseconds, and allows up to 3 digits after the decimal point.  You can customize both of these things, by calling `setScale()` which sets the time scale, and/or `setPrecision()` which controls the precision (the number of digits after the decimal).  Examples:
 
-```javascript
-var perf = new Perf();
+```js
+let perf = new Perf();
 
 perf.setScale( 1000000000 ); // nanoseconds
 perf.setScale( 1000000 ); // microseconds
@@ -142,14 +142,14 @@ perf.setPrecision( 1000 ); // 3 digits after the decimal
 
 So for example, if you wanted to track time in nanoseconds, but only use integers, set the two accordingly:
 
-```javascript
+```js
 perf.setScale( 1000000000 ); // nanoseconds
 perf.setPrecision( 1 ); // integers only
 ```
 
 Or, if you wanted to track time in seconds, but have floating point precision up to 6 digits after the decimal, call:
 
-```javascript
+```js
 perf.setScale( 1 ); // seconds
 perf.setPrecision( 1000000 ); // 6 digits after the decimal
 ```
@@ -227,7 +227,7 @@ Finally, if you need to simply fetch the current elapsed time for one single met
 To change the name of the total key, set the `totalKey` property to whatever string you want.  It defaults to `total`.  Example:
 
 ```js
-var perf = new Perf();
+let perf = new Perf();
 perf.totalKey = 't';
 ```
 
@@ -240,10 +240,10 @@ This mode is useful when your application measures the same metric multiple time
 To enable the feature, set the `minMax` property to true, then begin taking multiple measurements.  Example use:
 
 ```js
-var perf = new Perf();
+let perf = new Perf();
 perf.minMax = true;
 
-for (var idx = 0; idx < 100; idx++) {
+for (let idx = 0; idx < 100; idx++) {
 	perf.begin('load_data');
 		// do something loady
 	perf.end('load_data');
@@ -257,7 +257,7 @@ for (var idx = 0; idx < 100; idx++) {
 When you are done collecting measurements, call the `getMinMaxMetrics()` method to fetch a summary of all the minimums, averages, maximums, totals and counts for all your named metrics.  Example:
 
 ```js
-var metrics = perf.getMinMaxMetrics();
+let metrics = perf.getMinMaxMetrics();
 ```
 
 This returns an object which contains a property for each of your metrics, and the values are sub-objects containing `min`, `max`, `total`, `count` and `avg` properties.  Example:
@@ -288,17 +288,17 @@ Note that the `total` metric is ignored in this mode.  This is as designed, beca
 However, what you can do is use *two* types of `pixl-perf` objects, one to collect basic metrics (including a total) and another to accumulate them with `minMax`.  You can import metrics from one into the other using the `import()` method.  Example:
 
 ```js
-var a = new Perf();
+let a = new Perf();
 a.begin();
 	// do something
 a.end();
 
-var b = new Perf();
+let b = new Perf();
 b.begin();
 	// do something
 b.end();
 
-var perf = new Perf();
+let perf = new Perf();
 perf.minMax = true;
 perf.totalKey = 'unused';
 
@@ -306,7 +306,7 @@ perf.totalKey = 'unused';
 perf.import( a );
 perf.import( b );
 
-var metrics = perf.getMinMaxMetrics();
+let metrics = perf.getMinMaxMetrics();
 ```
 
 This would accumulate the metrics from `a` and `b` into the `perf` object and include their totals.  The trick here is setting the `totalKey` to `"unused"` (really any string other than the default `total`).  This allows `import()` to import the totals from `a` and `b`, which it normally wouldn't do.
